@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="#">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Logout</title>
+</head>
+
+<body>
+  <div id="no-auth" class="header">
+    <ul>
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="register.html">Register</a>
+      <a class="nav-link" href="login.html">Login</a>
+    </ul>
+  </div>
+
+  <div id="auth" class="header">
+    <ul>
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="account.html">My Account</a>
+      <a class="nav-link" href="logout.html">Logout</a>
+    </ul>
+  </div>
+  <div class="page-title">
+    <h1>Application Logout</h1>
+  </div>
+  <div class="logout-banner">
+    <img src="img/logout-banner.jpg" width="100%" height="500px" alt="logout banner">
+    <h2 style="text-align: center;">You have been logged out!</h2>
+  </div>
+
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-auth.js"></script>
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {/*creds here*/};
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const noAuth = document.getElementById("no-auth");
+      const auth = document.getElementById("auth");
+
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+          console.log("user", user);
+          firebase.auth().signOut();
+          auth.style.display = "block";
+          noAuth.style.display = "none";
+        } else {
+          auth.style.display = "none";
+          noAuth.style.display = "block";
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

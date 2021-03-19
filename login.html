@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="#">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Login</title>
+</head>
+
+<body>
+  <div id="no-auth" class="header">
+    <ul>
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="register.html">Register</a>
+      <a class="nav-link" href="login.html">Login</a>
+    </ul>
+  </div>
+  <div class="page-title">
+    <h1>Application Form</h1>
+  </div>
+
+  <div class="sign-in-section">
+    <div class="signin-form">
+      <h3 style="text-align: center;">Login Form</h3>
+        <div class="formfield">
+            <label for="email" class="field-label">Email ID: </label>
+            <input type="email" id="email" class="input-formfield" required>
+        </div>
+        <div class="formfield">
+            <label for="pasword" class="field-label">Password: </label>
+            <input type="password" id="password" class="input-formfield" required>
+        </div>
+        <div id="login-error"></div>
+        <div class="btn"><button id="login-button">Login</button></div>
+    </div>
+    <div class="signin-register-section">
+        <h2 class="not_a_member">Not a member? Sign up by clicking here</h2>
+        <div class="signin-register-button">
+            <a href="register.html" class="reg-button">Register</a>
+        </div>
+    </div>
+</div>
+
+  <hr>
+  <div class="other-app">Or, sign in using other apps</div>
+  <div class="login-app-error"></div>
+    <div class="signin-app">
+        <div class="signin-app-icon google">
+            <img class="google-icon" src="img/google.png" alt="google-icon">
+        </div>
+        <div class="signin-app-icon facebook">
+            <img class="facebook-icon" src="img/facebook.png" alt="facebook-icon">
+        </div>
+    </div>
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-firestore.js"></script>
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {/*creds here*/};
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const email = document.getElementById("email");
+      const password = document.getElementById("password");
+      const login = document.getElementById("login-button");
+      const googleLogin = document.querySelector(".signin-app-icon.google");
+      const facebookLogin = document.querySelector(".signin-app-icon.facebook");
+      const db = firebase.firestore();
+
+      login.addEventListener("click", function () {
+        firebase
+          .auth()
+          .signInWithEmailAndPassword(email.value, password.value)
+          .then(function () {
+            const user = firebase.auth().currentUser;
+            console.log("user", user);
+          })
+          .catch((err) => {
+            var loginError = document.getElementById("login-error");
+            loginError.innerHTML=err.message;
+          });
+      });
+
+      googleLogin.addEventListener("click", function(){
+        var provider = new firebase.auth.GoogleAuthProvider();
+        oneClickLogin(provider);
+      });
+
+      facebookLogin.addEventListener("click", function(){
+        var provider = new firebase.auth.FacebookAuthProvider();
+        provider.addScope('public_profile');
+        oneClickLogin(provider);
+      })
+
+      
+      
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+          window.location = "index.html";
+        }
+      });
+
+      const oneClickLogin = (provider) => {
+    firebase.auth().signInWithPopup(provider)
+    .then(result => {
+      debugger;
+      var profile = result.additionalUserInfo.profile;
+      addUserDetailsFromSocialMedia(result.user.uid, profile.first_name, profile.last_name, profile.picture.data.url, profile.email);
+      window.location = "index.html"; 
+    }).
+    catch((error) => {
+      var loginAppError = document.querySelector(".login-app-error");
+      loginAppError.innerHTML=error.message;
+    })
+  }
+
+  const addUserDetailsFromSocialMedia = (uid, firstname, lastname, profilepicture, email) => {
+    db.collection("Users")
+      .doc(uid)
+      .set({
+        firstname: firstname,
+        lastname: lastname,
+        user: uid,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        profilepic: profilepicture,
+        email: email
+      })
+  }
+
+
+    }); 
+
+  </script>
+</body>
+
+</html>

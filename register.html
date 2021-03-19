@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="#">
+    <link rel="stylesheet" href="css/style.css">
+    <title>Register</title>
+</head>
+
+<body>
+    <div id="no-auth" class="header">
+        <ul>
+            <a class="nav-link" href="index.html">Home</a>
+            <a class="nav-link" href="register.html">Register</a>
+            <a class="nav-link" href="login.html">Login</a>
+        </ul>
+    </div>
+
+    <div class="page-title">
+        <h1>Create an account</h1>
+    </div>
+
+    <div class="register-form">
+        <span class="register-info"><strong>*</strong> represent all the required fields</span>
+        <div class="formfield">
+            <label for="firstname" class="field-label">First Name*: </label>
+            <input type="text" id="firstname" class="input-formfield" required>
+        </div>
+        <div class="formfield">
+            <label for="lastname" class="field-label">Last Name*: </label>
+            <input type="text" id="lastname" class="input-formfield" required>
+        </div>
+        <div class="formfield">
+            <label for="email" class="field-label">Email ID*: </label>
+            <input type="email" id="email" class="input-formfield" required>
+        </div>
+        <div class="formfield">
+            <label for="password" class="field-label">Password*: </label>
+            <input type="password" id="password" class="input-formfield" required>
+        </div>
+        <div class="register-error"></div>
+        <div class="btn"><button id="register">Register</button></div>
+    </div>
+    <!-- The core Firebase JS SDK is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-firestore.js"></script>
+
+    <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+    <script>
+        // Your web app's Firebase configuration
+        var firebaseConfig = {/*creds here*/};
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const noAuth = document.getElementById("no-auth");
+            const auth = document.getElementById("auth");
+            const firstname = document.getElementById("firstname");
+            const lastname = document.getElementById("lastname");
+            const email = document.getElementById("email");
+            const password = document.getElementById("password");
+            const register = document.getElementById("register");
+            const db = firebase.firestore();
+
+            register.addEventListener("click", function () {
+                if(!firstname.value || !lastname.value || !email.value || !password.value) {
+                    debugger;
+                    !firstname.value ?  firstname.classList.add("error"):firstname.classList.remove("error");
+                    !lastname.value ?  lastname.classList.add("error"):lastname.classList.remove("error");
+                    !email.value ?  email.classList.add("error"):email.classList.remove("error");
+                    !password.value ?  password.classList.add("error"):password.classList.remove("error");
+                    document.querySelector(".register-error").innerHTML = "Please input all the required field";
+                } else {
+                    firstname.classList.contains("error") ? firstname.classList.remove("error"):"";
+                    lastname.classList.contains("error") ? lastname.classList.remove("error"):"";
+                    email.classList.contains("error") ? email.classList.remove("error"):"";
+                    password.classList.contains("error") ? password.classList.remove("error"):"";
+                    firebase
+                    .auth()
+                    .createUserWithEmailAndPassword(email.value, password.value)
+                    .then(function (data) {
+                        const user = firebase.auth().currentUser;
+                        addUser(user.uid, firstname.value, lastname.value, email.value);
+                    })
+                    .catch((err) => {
+                        var registerError = document.querySelector(".register-error");
+                        registerError.innerHTML=err.message;
+                    });
+                }
+            });
+
+            function addUser(uid, first, last, email) {
+                db.collection("Users")
+                    .doc(uid)
+                    .set({
+                        firstname: first,
+                        lastname: last,
+                        user: uid,
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        email: email
+                    })
+                    .then(function () {
+                        window.location = "index.html";
+                    })
+                    .catch((err) => console.log("err", err));
+            }
+        });
+    </script>
+</body>
+
+</html>

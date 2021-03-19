@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" href="#">
+  <link rel="stylesheet" href="css/style.css">
+  <title>My Account</title>
+</head>
+
+<body>
+  <div id="auth" class="header">
+    <ul>
+      <a class="nav-link" href="index.html">Home</a>
+      <a class="nav-link" href="account.html">My Account</a>
+      <a class="nav-link" href="logout.html">Logout</a>
+    </ul>
+  </div>
+
+  <div class="page-title">
+    <h1>My Account Details</h1>
+  </div>  
+
+  <div class="my-details">
+    <div class="profile-image">
+      <img style="display: none;" alt="Profile Picture" class="profile-pic">
+      <div class="upload-image">
+        <div class="upload-text">
+          <img src="img/upload.png" alt="upload_icon">
+          <p>Upload Profile Picture</p>
+          <input type="file" class="uploadImage" style="display: none;"/>
+        </div>
+      </div>
+    </div>
+    <div class="details-form">
+        <div class="formfield">
+            <label for="firstname" class="field-label">First Name: </label>
+            <input type="text" id="firstname" class="input-formfield">
+        </div>
+        <div class="formfield">
+          <label for="lastname" class="field-label">Last Name: </label>
+          <input type="text" id="lastname" class="input-formfield">
+        </div>
+        <div class="formfield">
+          <label for="email" class="field-label">Email ID: </label>
+          <input type="text" id="email" class="input-formfield" readonly disabled>
+        </div>
+        <div class="btn update-button"><button id="update">Update</button></div>
+      </div>
+      <input type="hidden" class="user-uid">
+    </div>
+<!-- 
+  <input type="submit" id="update" value="Update" /> -->
+
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-firestore.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.2.7/firebase-storage.js"></script>
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+     https://firebase.google.com/docs/web/setup#available-libraries -->
+
+  <script>
+    // Your web app's Firebase configuration
+    var firebaseConfig = {/*creds here*/};
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const db = firebase.firestore();
+      const firstname = document.getElementById("firstname");
+      const lastname = document.getElementById("lastname");
+      const update = document.getElementById("update");
+      const email = document.getElementById("email");
+      const profilePic = document.querySelector(".profile-pic");
+      const uploadImage = document.querySelector(".upload-image");
+      const uploadImageInput = document.querySelector(".uploadImage");
+      let userRef = null;
+
+      uploadImage.addEventListener("click", function(){
+        uploadImageInput.click();
+      })
+
+      uploadImageInput.addEventListener("change", function (e) {
+        file = e.target.files[0];
+        fileName = file.name.split(".").shift();
+        fileExt = file.name.split(".").pop();
+        const user_uid = document.querySelector(".user-uid").value;
+        const id = db.collection("images").doc().id;
+        const storageRef = firebase.storage().ref(`images/${id}.${fileExt}`);
+        const uploadTask = storageRef.put(file);
+
+        uploadTask.on(
+                "state_changed",
+                function (snapshot) {
+                    console.log("upload is progress");
+                },
+                function (error) {
+                    console.log(error);
+                },
+                function () {
+                    uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+                        db.collection("Users")
+                            .doc(user_uid)
+                            .update("profilepic", downloadURL)
+                            .then(function () {
+                                console.log("work done");
+                                window.location.reload();
+                            });
+                    });
+                }
+            );
+    });
+
+      function getUser(uid) {
+        db.collection("Users")
+          .doc(uid)
+          .get()
+          .then(function (doc) {
+            if (doc.exists) {
+              firstname.value = doc.data().firstname;
+              lastname.value = doc.data().lastname;
+              profilePic.src = doc.data().profilepic?doc.data().profilepic:"";
+              email.value = doc.data().email;
+            } else {
+              console.log("No such document");
+            }
+            if(doc.data().profilepic) {
+            profilePic.style.display = "block";
+            uploadImage.style.display = "none";
+          } else {
+            profilePic.style.display = "none";
+            uploadImage.style.display = "block";
+          }
+          });
+      }
+
+      function updateUser(uid, first, last) {
+        db.collection("Users").doc(uid).update({
+          firstname: first,
+          lastname: last,
+        });
+      }
+
+      update.addEventListener("click", function () {
+        console.log("update");
+        updateUser(userRef.uid, firstname.value, lastname.value);
+      });
+
+      firebase.auth().onAuthStateChanged(function (user) {
+        if (user) {
+          debugger;
+          console.log("user", user);
+          userRef = user;
+          document.querySelector(".user-uid").value = user.uid;
+          getUser(user.uid);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
